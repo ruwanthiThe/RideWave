@@ -1,4 +1,4 @@
-import OnBoardingScreen from '@/screens/onboarding.screen';
+import OnBoardingScreen from '@/screens/onboarding/onboarding.screen';
 
 export default function index() {
   return(
