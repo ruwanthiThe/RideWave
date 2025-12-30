@@ -32,7 +32,7 @@ export default function SelectInput({
       <RNPickerSelect
         onValueChange={onValueChange}
         items={items}
-        placeholder={{ label:placeholder, value:value }}
+        placeholder={{ label:placeholder, value:null }}
         style={{
           inputIOS: {
             ...styles.input,
