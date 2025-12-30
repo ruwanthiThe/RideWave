@@ -45,7 +45,7 @@ const AuthContainer = ({ container, topSpace, imageShow }: Props) => {
         <View style={[styles.container]}>
           <ScrollView>{container}</ScrollView>
         </View>
-      </View> 
+      </View>
     </KeyboardAvoidingView>
   );
 };

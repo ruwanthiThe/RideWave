@@ -13,6 +13,12 @@ import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
 
 export default function LoginScreen() {
+  const [phone_number, setphone_number] = useState("");
+  const [loading, setloading] = useState(false);
+  const [countryCode, setCountryCode] = useState("+880");
+  const toast = useToast();
+
+
   return (
     <AuthContainer
       topSpace={windowHeight(150)}
@@ -25,7 +31,10 @@ export default function LoginScreen() {
               <SignInText />
               <View style={[external.mt_25, external.Pb_10]}>
                 <PhoneNumberInput
-                 
+                  phone_number={phone_number}
+                  setphone_number={setphone_number}
+                  countryCode={countryCode}
+                  setCountryCode={setCountryCode}
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
                   <Button
@@ -37,9 +46,8 @@ export default function LoginScreen() {
               </View>
             </View>
           </View>
-         
         </View>
       }
     />
-  )
+  );
 }
