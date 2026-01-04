@@ -272,39 +272,57 @@ export const signupNewUser = async (req: Request, res: Response,next: NextFuncti
   }
 }
 
+// sending otp to email
 export const sendingOtpToEmail = async (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     const { email, name, userId } = req.body;
 
-    // DEV MODE — skip Nylas
-    if (process.env.NODE_ENV !== "production") {
-      const otp = "1234"; // fixed dev OTP
-      const token = jwt.sign(
-        { user: { userId, name, email }, otp },
-        process.env.EMAIL_ACTIVATION_SECRET!,
-        { expiresIn: "10m" }
-      );
-
-      console.log(`[DEV] Email OTP for ${email}: ${otp}`);
-
-      return res.status(200).json({
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const user = {
+      userId,
+      name,
+      email,
+    };
+    const token = jwt.sign(
+      {
+        user,
+        otp,
+      },
+      process.env.EMAIL_ACTIVATION_SECRET!,
+      {
+        expiresIn: "5m",
+      }
+    );
+    try {
+      await nylas.messages.send({
+        identifier: process.env.USER_GRANT_ID!,
+        requestBody: {
+          to: [{ name: name, email: email }],
+          subject: "Verify your email address!",
+          body: `
+          <p>Hi ${name},</p>
+      <p>Your Ridewave verification code is ${otp}. If you didn't request for this OTP, please ignore this email!</p>
+      <p>Thanks,<br>Ridewave Team</p>
+          `,
+        },
+      });
+      res.status(201).json({
         success: true,
         token,
       });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+      console.log(error);
     }
-
-    // PROD MODE — real email
-    // (keep your existing Nylas code here)
-
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      success: false,
-      message: "Email OTP failed",
-    });
   }
 };
 
