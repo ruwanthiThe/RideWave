@@ -15,8 +15,45 @@ import axios from "axios";
 export default function LoginScreen() {
   const [phone_number, setphone_number] = useState("");
   const [loading, setloading] = useState(false);
-  const [countryCode, setCountryCode] = useState("+880");
+  const [countryCode, setCountryCode] = useState("+94");
   const toast = useToast();
+
+   const handleSubmit = async () => {
+  if (phone_number === "" || countryCode === "") {
+    toast.show("Please fill the fields!", { placement: "bottom" });
+    return;
+  }
+
+  setloading(true);
+
+  const phoneNumber = `${countryCode}${phone_number}`;
+
+  try {
+    const baseUrl = (process.env.EXPO_PUBLIC_SERVER_URI || "").replace(/\/$/, "");
+    if (!baseUrl) console.warn("EXPO_PUBLIC_SERVER_URI is not set");
+    const url = `${baseUrl}/registration`;
+    console.log("Calling OTP endpoint:", url, phoneNumber);
+
+    const res = await axios.post(url, { phone_number: phoneNumber });
+    console.log("OTP response:", res.data);
+
+    if (res.data.success) {
+      router.push({
+        pathname: "/otp-verification",
+        params: {
+          phone: phoneNumber,
+          otp: res.data.otp || "", // 👈 OTP comes only in dev
+        },
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    toast.show("Something went wrong", { placement: "bottom" });
+  } finally {
+    setloading(false);
+  }
+};
+
 
 
   return (
@@ -39,7 +76,8 @@ export default function LoginScreen() {
                 <View style={[external.mt_25, external.Pb_15]}>
                   <Button
                     title="Get Otp"
-                    onPress={() => router.push("/(routes)/otp-verification")}
+                    onPress={() => handleSubmit()}
+                    disabled={loading}
                     
                   />
                 </View>
