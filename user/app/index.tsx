@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
 
 export default function index() {
   const [isLoggedIn, setisLoggedIn] = useState(false);
@@ -29,8 +30,12 @@ export default function index() {
       getData();
     }, []);
 
-    if(isLoading){
-      return null; // or a loading spinner
+    if (isLoading) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" />
+        </View>
+      );
     }
 
     
