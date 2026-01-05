@@ -1,6 +1,10 @@
-import { View, Text } from 'react-native'
+import { View, Text,KeyboardAvoidingView, Platform } from 'react-native'
 import styles from "./styles";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { external } from "@/styles/external.style";
+import { windowHeight } from "@/themes/app.constant";
+import MapView from "react-native-maps";
+
 
 export default function RidePlanScreen() {
   const [places, setPlaces] = useState<any>([]);
@@ -24,8 +28,26 @@ export default function RidePlanScreen() {
   });
   const [keyboardAvoidingHeight, setkeyboardAvoidingHeight] = useState(false);
   return (
-    <View>
-      <Text>RidePlanScreen</Text>
-    </View>
+    <KeyboardAvoidingView
+      style={[external.fx_1]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+        <View>
+            <View
+            style={{ height: windowHeight(!keyboardAvoidingHeight ? 500 : 300) }}
+            >
+            <MapView
+            style={{ flex: 1 }}
+            region={region}
+            onRegionChangeComplete={(region) => setRegion(region)}
+          >
+
+          </MapView>
+
+            </View>
+
+        </View>
+
+    </KeyboardAvoidingView>
   )
 }
