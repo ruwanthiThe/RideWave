@@ -2,7 +2,7 @@ import { View, Text, SafeAreaView, FlatList, ScrollView } from "react-native";
 import styles from "./styles";
 import { commonStyles } from "@/styles/common.style";
 import { external } from "@/styles/external.style";
-
+import LocationSearchBar from "@/components/location/location.search.bar";
 import color from "@/themes/app.colors";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,7 +42,7 @@ export default function HomeScreen() {
           >
             Ride Wave
           </Text>
-          
+          <LocationSearchBar />
         </View>
         <View style={{ padding: 5 }}>
           <View
