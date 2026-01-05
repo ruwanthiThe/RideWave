@@ -9,6 +9,7 @@ const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   width,
+  height,
   backgroundColor,
   textColor,
 }) => {
@@ -19,6 +20,7 @@ const Button: React.FC<ButtonProps> = ({
         styles.container,
         {
           width: widthNumber,
+          height: height,
           backgroundColor: backgroundColor || color.buttonBg,
         },
       ]}
