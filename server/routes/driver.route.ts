@@ -6,6 +6,7 @@ import {
   sendingOtpToEmailDriver,
   verifyingEmailOtpDriver,
   getLoggedInDriverData,
+  updateDriverStatus,
 } from "../controllers/driver.controller";
 import { isAuthenticatedDriver } from "../middleware/isAuthenticated";
 
@@ -21,5 +22,7 @@ driverRouter.post("/email-otp-request", sendingOtpToEmailDriver);
 driverRouter.post("/email-otp-verify", verifyingEmailOtpDriver);
 
 driverRouter.get("/me", isAuthenticatedDriver, getLoggedInDriverData);
+
+driverRouter.put("/update-status", isAuthenticatedDriver, updateDriverStatus);
 
 export default driverRouter;

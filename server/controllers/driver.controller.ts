@@ -148,3 +148,29 @@ export const getLoggedInDriverData = async (req: any, res: Response) => {
     console.log(error);
   }
 };
+
+// updating driver status
+export const updateDriverStatus = async (req: any, res: Response) => {
+  try {
+    const { status } = req.body;
+
+    const driver = await prisma.driver.update({
+      where: {
+        id: req.driver.id!,
+      },
+      data: {
+        status,
+      },
+    });
+    res.status(201).json({
+      success: true,
+      driver,
+    });
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
