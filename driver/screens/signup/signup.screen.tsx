@@ -45,7 +45,7 @@ export default function SignupScreen() {
       }
 
       setShowWarning(false);
-      router.push("/verification-phone-number");
+      router.push("/(routes)/document-verification");
     };
 
     return (
