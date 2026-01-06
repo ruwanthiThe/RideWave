@@ -12,11 +12,34 @@ import AuthContainer from "@/utils/container/auth-container";
 import { windowHeight } from "@/themes/app.constant";
 import axios from "axios";
 import { Toast } from "react-native-toast-notifications";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const SERVER = process.env.EXPO_PUBLIC_SERVER_URI;
 
 export default function PhoneNumberVerificationScreen() {
-    const handleSubmit = async () => {};
-     return (
+  const { phone_number } = useLocalSearchParams();
+  const [otp, setOtp] = useState("");
+  const driver = useLocalSearchParams();
+  const [loader, setLoader] = useState(false);
+
+  const handleSubmit = async () => {
+    try {
+      await axios.post(`${SERVER}/driver/verify-otp`, {
+        phone_number,
+        otp,
+      });
+
+      Toast.show("Phone verified successfully", { type: "success" });
+      router.push({
+        pathname: "/(routes)/email-verification",
+        params: driver,
+      });
+      
+    } catch (error) {
+      Toast.show("Invalid OTP", { type: "danger" });
+    }
+  };
+
+  return (
     <AuthContainer
       topSpace={windowHeight(240)}
       imageShow={true}
@@ -24,42 +47,35 @@ export default function PhoneNumberVerificationScreen() {
         <View>
           <SignInText
             title={"Phone Number Verification"}
-            subtitle={"Check your phone number for the otp!"}
+            subtitle={"Enter the 4 digit OTP"}
           />
+
           <OTPTextInput
-            handleTextChange={(code) => console.log(code)}
+            handleTextChange={(code) => setOtp(code)}
             inputCount={4}
             textInputStyle={style.otpTextInput}
             tintColor={color.subtitle}
             autoFocus={false}
           />
+
           <View style={[external.mt_30]}>
             <Button
               title="Verify"
               height={windowHeight(30)}
-              onPress={() => handleSubmit()}
-              
+              onPress={handleSubmit}
+              disabled={loader}
             />
           </View>
+
           <View style={[external.mb_15]}>
-            <View
+            <Text
               style={[
-                external.pt_10,
-                external.Pb_10,
-                {
-                  flexDirection: "row",
-                  gap: 5,
-                  justifyContent: "center",
-                },
+                commonStyles.regularText,
+                { textAlign: "center", marginTop: 10 },
               ]}
             >
-              <Text style={[commonStyles.regularText]}>Not Received yet?</Text>
-              <TouchableOpacity>
-                <Text style={[style.signUpText, { color: "#000" }]}>
-                  Resend it
-                </Text>
-              </TouchableOpacity>
-            </View>
+              
+            </Text>
           </View>
         </View>
       }

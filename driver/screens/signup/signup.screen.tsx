@@ -35,17 +35,30 @@ export default function SignupScreen() {
       const isEmailInvalid = !isEmailEmpty && emailFormatWarning !== "";
 
       if (isEmailEmpty) {
-        setShowWarning(true);
-        return;
-      }
-
-      if (isEmailInvalid) {
-        setShowWarning(true);
-        return;
-      }
-
+      setShowWarning(true);
+    } else if (isEmailInvalid) {
+      setShowWarning(true);
+    } else {
       setShowWarning(false);
-      router.push("/(routes)/document-verification");
+      const phoneNumberData = countryNameItems.find(
+        (i: any) => i.label === formData.country
+      );
+
+      const countryCode = phoneNumberData?.value || "94"; // fallback to 94
+const phone_number = `+${countryCode}${formData.phoneNumber.replace(/^0/, "")}`;
+
+
+      const driverData = {
+        name: formData.name,
+        country: formData.country,
+        phone_number: phone_number,
+        email: formData.email,
+      };
+      router.push({
+        pathname: "/(routes)/document-verification",
+        params: driverData,
+      });
+    }
     };
 
     return (

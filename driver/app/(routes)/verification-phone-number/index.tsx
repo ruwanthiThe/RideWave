@@ -1,10 +1,8 @@
-import { View, Text } from 'react-native'
+import PhoneNumberVerificationScreen from "@/screens/verifications/phone-number.screen";
 import React from 'react'
 
-export default function VerificationPhoneNumber() {
+export default function verificationPhoneNumber() {
   return (
-    <View>
-      <Text>VerificationPhoneNumber</Text>
-    </View>
+    <PhoneNumberVerificationScreen />
   )
 }

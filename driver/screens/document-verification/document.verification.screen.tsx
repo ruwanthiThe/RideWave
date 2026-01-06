@@ -10,7 +10,7 @@ import SelectInput from "@/components/common/select-input";
 import Button from "@/components/common/button";
 import color from "@/themes/app.colors";
 import { router, useLocalSearchParams } from "expo-router";
-
+import axios from "axios";
 import { Toast } from "react-native-toast-notifications";
 
 export default function DocumentVerificationScreen() {
@@ -35,15 +35,58 @@ export default function DocumentVerificationScreen() {
   };
 
   const handleSubmit = async () => {
-    
+    setLoading(true);
+
+    const driver = {
+      ...driverData,
+      vehicle_type: formData.vehicleType,
+      registration_number: formData.registrationNumber,
+      registration_date: formData.registrationDate,
+      driving_license: formData.drivingLicenseNumber,
+      vehicle_color: formData.color,
+      rate: formData.rate,
     };
 
-    
+    try {
+      // 🔹 Send Email OTP to driver
+      const res = await axios.post(
+        `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/email-otp-request`,
+        {
+          name: driver.name,
+          email: driver.email,
+          phone_number: driver.phone_number,
+          country: driver.country,
+          vehicle_type: driver.vehicle_type,
+          registration_number: driver.registration_number,
+          registration_date: driver.registration_date,
+          driving_license: driver.driving_license,
+          vehicle_color: driver.vehicle_color,
+          rate: driver.rate,
+        }
+      );
+
+      // 🔹 Get token returned from backend (needed for verification)
+      const token = res.data.token;
+
+      // 🔹 Navigate to driver email verification screen
+      router.push({
+        pathname: "/(routes)/email-verification",
+        params: { ...driver, token },
+      });
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      Toast.show(error.message, {
+        placement: "bottom",
+        type: "danger",
+      });
+    }
+  };
 
   return (
     <ScrollView>
       <View>
-        {/* logo */}
         <Text
           style={{
             fontFamily: "TT-Octosquares-Medium",
@@ -56,9 +99,7 @@ export default function DocumentVerificationScreen() {
         </Text>
         <View style={{ padding: windowWidth(20) }}>
           <ProgressBar fill={2} />
-          <View
-            style={[styles.subView, { backgroundColor: colors.background }]}
-          >
+          <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <View style={styles.space}>
               <TitleView
                 title={"Vehicle Registration"}
@@ -82,9 +123,7 @@ export default function DocumentVerificationScreen() {
                 placeholder="Enter your vehicle registration number"
                 keyboardType="number-pad"
                 value={formData.registrationNumber}
-                onChangeText={(text) =>
-                  handleChange("registrationNumber", text)
-                }
+                onChangeText={(text) => handleChange("registrationNumber", text)}
                 showWarning={showWarning && formData.registrationNumber === ""}
                 warning={"Please enter your vehicle registration number!"}
               />
@@ -94,19 +133,15 @@ export default function DocumentVerificationScreen() {
                 value={formData.registrationDate}
                 onChangeText={(text) => handleChange("registrationDate", text)}
                 showWarning={showWarning && formData.registrationDate === ""}
-                warning={"Please enter your vehicle Registration Date number!"}
+                warning={"Please enter your vehicle Registration Date!"}
               />
               <Input
                 title={"Driving License Number"}
                 placeholder={"Enter your driving license number"}
                 keyboardType="number-pad"
                 value={formData.drivingLicenseNumber}
-                onChangeText={(text) =>
-                  handleChange("drivingLicenseNumber", text)
-                }
-                showWarning={
-                  showWarning && formData.drivingLicenseNumber === ""
-                }
+                onChangeText={(text) => handleChange("drivingLicenseNumber", text)}
+                showWarning={showWarning && formData.drivingLicenseNumber === ""}
                 warning={"Please enter your driving license number!"}
               />
               <Input
@@ -133,11 +168,12 @@ export default function DocumentVerificationScreen() {
             </View>
             <View style={styles.margin}>
               <Button
-                onPress={() => router.push("/(routes)/verification-email")}
+                onPress={() => handleSubmit()}
                 title={"Submit"}
                 height={windowHeight(30)}
                 backgroundColor={color.buttonBg}
                 textColor={color.whiteColor}
+                disabled={loading}
               />
             </View>
           </View>
