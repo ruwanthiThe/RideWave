@@ -70,8 +70,13 @@ export default function HomeScreen() {
       >
 
         <TouchableOpacity
-        
+        style={styles.modalBackground}
+        onPress={handleClose}
+        activeOpacity={1}
         >
+          <TouchableOpacity>
+            
+          </TouchableOpacity>
 
         </TouchableOpacity>
 
