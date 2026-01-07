@@ -1,6 +1,15 @@
-import { View, Text,KeyboardAvoidingView, Platform ,TouchableOpacity, Dimensions, Pressable,ScrollView,
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  Dimensions,
+  Pressable,
+  ScrollView,
   Image,
-  ActivityIndicator,} from 'react-native'
+  ActivityIndicator,
+} from "react-native";
 import styles from "./styles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { external } from "@/styles/external.style";
@@ -8,13 +17,11 @@ import { windowHeight, windowWidth } from "@/themes/app.constant";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { router } from "expo-router";
-import { LeftArrow } from '@/assets/icons/leftarrows';
-import { Clock } from '@/assets/icons/clock';
-import DownArrow from '@/assets/icons/downArrow';
-import { PickLocation } from '@/assets/icons/pickLocation';
-import PlaceHolder from '@/assets/icons/placeHolder';
+import { Clock, LeftArrow, PickLocation, PickUpLocation } from "@/utils/icons";
+import color from "@/themes/app.colors";
+import DownArrow from "@/assets/icons/downArrow";
+import PlaceHolder from "@/assets/icons/placeHolder";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { PickUpLocation } from '@/assets/icons/pickUpLocation';
 import _ from "lodash";
 import axios from "axios";
 import * as Location from "expo-location";
@@ -22,9 +29,15 @@ import { Toast } from "react-native-toast-notifications";
 import moment from "moment";
 import { parseDuration } from "@/utils/time/parse.duration";
 import Button from "@/components/common/button";
+import { useGetUserData } from "@/hooks/useGetUserData";
 
+import Constants from "expo-constants";
 
 export default function RidePlanScreen() {
+  const { user } = useGetUserData();
+  const ws = useRef<any>(null);
+  const notificationListener = useRef<any>();
+  const [wsConnected, setWsConnected] = useState(false);
   const [places, setPlaces] = useState<any>([]);
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState<any>({
@@ -45,6 +58,9 @@ export default function RidePlanScreen() {
     transit: null,
   });
   const [keyboardAvoidingHeight, setkeyboardAvoidingHeight] = useState(false);
+  const [driverLists, setdriverLists] = useState([]);
+  const [selectedDriver, setselectedDriver] = useState<DriverType>();
+  const [driverLoader, setdriverLoader] = useState(true);
 
     useEffect(() => {
     (async () => {
@@ -73,7 +89,26 @@ export default function RidePlanScreen() {
     })();
   }, []);
 
+  const initializeWebSocket = () => {
+    ws.current = new WebSocket("ws://192.168.1.7:5000");
+    ws.current.onopen = () => {
+      console.log("Connected to websocket server");
+      setWsConnected(true);
+    };
 
+    ws.current.onerror = (e: any) => {
+      console.log("WebSocket error:", e.message);
+    };
+
+    ws.current.onclose = (e: any) => {
+      console.log("WebSocket closed:", e.code, e.reason);
+      setWsConnected(false);
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        initializeWebSocket();
+      }, 5000);
+    };
+  }
 
   const fetchPlaces = async (input: any) => {
     try {
@@ -174,6 +209,7 @@ export default function RidePlanScreen() {
         longitude: lng,
       });
       setPlaces([]);
+      requestNearbyDrivers();
       
       setlocationSelected(true);
       setkeyboardAvoidingHeight(false);
@@ -215,6 +251,60 @@ export default function RidePlanScreen() {
       setDistance(dist);
     }
   }, [marker, currentLocation]);
+
+
+  const getNearbyDrivers = () => {
+    ws.current.onmessage = async (e: any) => {
+      try {
+        const message = JSON.parse(e.data);
+        if (message.type === "nearbyDrivers") {
+          await getDriversData(message.drivers);
+        }
+      } catch (error) {
+        console.log(error, "Error parsing websocket");
+      }
+    };
+  };
+
+   const getDriversData = async (drivers: any) => {
+    // Extract driver IDs from the drivers array
+    const driverIds = drivers.map((driver: any) => driver.id).join(",");
+    const response = await axios.get(
+      `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/get-drivers-data`,
+      {
+        params: { ids: driverIds },
+      }
+    );
+
+    const driverData = response.data;
+    setdriverLists(driverData);
+    setdriverLoader(false);
+  };
+
+   const requestNearbyDrivers = () => {
+    console.log(wsConnected);
+    if (currentLocation && wsConnected) {
+      ws.current.send(
+        JSON.stringify({
+          type: "requestRide",
+          role: "user",
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        })
+      );
+      getNearbyDrivers();
+    }
+  };
+
+  const handleOrder = async () => {
+    
+
+    const data = {
+      driver: selectedDriver|| driverLists[0],
+      user,
+      currentLocation
+    }
+  };
 
   return (
     <KeyboardAvoidingView

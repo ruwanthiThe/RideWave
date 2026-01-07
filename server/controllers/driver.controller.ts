@@ -5,9 +5,6 @@ import jwt from "jsonwebtoken";
 import { nylas } from "../app";
 import { sendToken } from "../utils/send-token";
 
-/**
- * DEV ONLY: in-memory OTP store
- */
 const phoneOtpStore = new Map<string, string>();
 
 // ==========================
@@ -172,5 +169,30 @@ export const updateDriverStatus = async (req: any, res: Response) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+// get drivers data with id
+export const getDriversById = async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.query as any;
+    
+    if (!ids) {
+      return res.status(400).json({ message: "No driver IDs provided" });
+    }
+
+    const driverIds = ids.split(",");
+
+    // Fetch drivers from database
+    const drivers = await prisma.driver.findMany({
+      where: {
+        id: { in: driverIds },
+      },
+    });
+
+    res.json(drivers);
+  } catch (error) {
+    console.error("Error fetching driver data:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

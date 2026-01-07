@@ -1,23 +1,20 @@
 import {
   View,
   Text,
-  
+  FlatList,
   Modal,
   TouchableOpacity,
   Platform,
   ScrollView,
 } from "react-native";
-
-import Header from '@/components/common/header';
-import styles from './styles';
-import { useTheme } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { rideData } from '@/configs/constants';
-import RideCard from "@/components/ride/ride.card";
-import { recentRidesData } from "@/configs/constants";
+import React, { useEffect, useRef, useState } from "react";
+import Header from "@/components/common/header";
+import { recentRidesData, rideData } from "@/configs/constants";
+import { useTheme } from "@react-navigation/native";
 import RenderRideItem from "@/components/ride/render.ride.item";
-import { FlatList } from "react-native";
 import { external } from "@/styles/external.style";
+import styles from "./styles";
+import RideCard from "@/components/ride/ride.card";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
@@ -30,12 +27,12 @@ import * as GeoLocation from "expo-location";
 import { Toast } from "react-native-toast-notifications";
 import { useGetDriverData } from "@/hooks/useGetDriverData";
 import Constants from "expo-constants";
-import  { useEffect, useRef } from "react";
 
 import { router } from "expo-router";
 
 
 export default function HomeScreen() {
+  const { driver, loading: DriverDataLoading } = useGetDriverData();
   const [isOn, setIsOn] = React.useState<any>(false);
   const [loading, setloading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,8 +42,11 @@ export default function HomeScreen() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
+  const [wsConnected, setWsConnected] = useState(false);
   const [marker, setMarker] = useState<any>(null);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const ws = new WebSocket("ws://192.168.1.7:5000");
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -57,6 +57,73 @@ export default function HomeScreen() {
     };
     fetchStatus();
   }, []);
+
+
+   // socket updates
+  useEffect(() => {
+    ws.onopen = () => {
+      console.log("Connected to WebSocket server");
+      setWsConnected(true);
+    };
+
+    ws.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      console.log("Received message:", message);
+      // Handle received location updates here
+    };
+
+    ws.onerror = (e: any) => {
+      console.log("WebSocket error:", e.message);
+    };
+
+    ws.onclose = (e) => {
+      console.log("WebSocket closed:", e.code, e.reason);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+
+   const sendLocationUpdate = async (location: any) => {
+     if (ws.readyState === WebSocket.OPEN) {
+            const message = JSON.stringify({
+              type: "locationUpdate",
+              data: location,
+              role: "driver",
+              driver: driver?.id,
+            });
+            ws.send(message);
+          }
+   };
+
+
+
+    useEffect(() => {
+    (async () => {
+      let { status } = await GeoLocation.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Toast.show("Please give us to access your location to use this app!");
+        return;
+      }
+
+      await GeoLocation.watchPositionAsync(
+        {
+          accuracy: GeoLocation.Accuracy.High,
+          timeInterval: 1000,
+          distanceInterval: 1,
+        },
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setCurrentLocation({ latitude, longitude });
+          if(driver && wsConnected){
+            sendLocationUpdate({ latitude, longitude } );
+          }
+        }
+      );
+    })();
+  }, [driver]);
 
 
   
