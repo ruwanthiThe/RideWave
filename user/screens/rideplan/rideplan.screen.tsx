@@ -30,10 +30,9 @@ import moment from "moment";
 import { parseDuration } from "@/utils/time/parse.duration";
 import Button from "@/components/common/button";
 import { useGetUserData } from "@/hooks/useGetUserData";
-
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import Constants from "expo-constants";
-
-
 
 export default function RidePlanScreen() {
   const { user } = useGetUserData();
@@ -64,7 +63,37 @@ export default function RidePlanScreen() {
   const [selectedDriver, setselectedDriver] = useState<DriverType>();
   const [driverLoader, setdriverLoader] = useState(true);
 
-    useEffect(() => {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        const orderData = {
+          currentLocation: notification.request.content.data.currentLocation,
+          marker: notification.request.content.data.marker,
+          distance: notification.request.content.data.distance,
+          driver: notification.request.content.data.orderData,
+        };
+        router.push({
+          pathname: "/(routes)/ride-details",
+          params: { orderData: JSON.stringify(orderData) },
+        });
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -92,7 +121,7 @@ export default function RidePlanScreen() {
   }, []);
 
   const initializeWebSocket = () => {
-    ws.current = new WebSocket("ws://192.168.1.7:5000");
+    ws.current = new WebSocket("ws://192.168.1.2:8080");
     ws.current.onopen = () => {
       console.log("Connected to websocket server");
       setWsConnected(true);
@@ -110,7 +139,7 @@ export default function RidePlanScreen() {
         initializeWebSocket();
       }, 5000);
     };
-  }
+  };
 
   useEffect(() => {
     initializeWebSocket();
@@ -120,6 +149,62 @@ export default function RidePlanScreen() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        Toast.show("Failed to get push token for push notification!", {
+          type: "danger",
+        });
+        return;
+      }
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ??
+        Constants?.easConfig?.projectId;
+      if (!projectId) {
+        Toast.show("Failed to get project id for push notification!", {
+          type: "danger",
+        });
+      }
+      try {
+        const pushTokenString = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log(pushTokenString);
+        // return pushTokenString;
+      } catch (e: unknown) {
+        Toast.show(`${e}`, {
+          type: "danger",
+        });
+      }
+    } else {
+      Toast.show("Must use physical device for Push Notifications", {
+        type: "danger",
+      });
+    }
+
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+  }
 
   const fetchPlaces = async (input: any) => {
     try {
@@ -149,11 +234,9 @@ export default function RidePlanScreen() {
     }
   }, [query, debouncedFetchPlaces]);
 
-  
   const handleInputChange = (text: any) => {
     setQuery(text);
-  }
-
+  };
 
   const fetchTravelTimes = async (origin: any, destination: any) => {
     const modes = ["driving", "walking", "bicycling", "transit"];
@@ -194,9 +277,7 @@ export default function RidePlanScreen() {
     setTravelTimes(travelTimes);
   };
 
-
-
-   const handlePlaceSelect = async (placeId: any) => {
+  const handlePlaceSelect = async (placeId: any) => {
     try {
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/details/json`,
@@ -221,7 +302,6 @@ export default function RidePlanScreen() {
       });
       setPlaces([]);
       requestNearbyDrivers();
-      
       setlocationSelected(true);
       setkeyboardAvoidingHeight(false);
       if (currentLocation) {
@@ -232,7 +312,7 @@ export default function RidePlanScreen() {
     }
   };
 
-    const calculateDistance = (lat1: any, lon1: any, lat2: any, lon2: any) => {
+  const calculateDistance = (lat1: any, lon1: any, lat2: any, lon2: any) => {
     var p = 0.017453292519943295; // Math.PI / 180
     var c = Math.cos;
     var a =
@@ -243,13 +323,12 @@ export default function RidePlanScreen() {
     return 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
   };
 
-   const getEstimatedArrivalTime = (travelTime: any) => {
+  const getEstimatedArrivalTime = (travelTime: any) => {
     const now = moment();
     const travelMinutes = parseDuration(travelTime);
     const arrivalTime = now.add(travelMinutes, "minutes");
     return arrivalTime.format("hh:mm A");
   };
-
 
   useEffect(() => {
     if (marker && currentLocation) {
@@ -262,7 +341,6 @@ export default function RidePlanScreen() {
       setDistance(dist);
     }
   }, [marker, currentLocation]);
-
 
   const getNearbyDrivers = () => {
     ws.current.onmessage = async (e: any) => {
@@ -277,7 +355,7 @@ export default function RidePlanScreen() {
     };
   };
 
-   const getDriversData = async (drivers: any) => {
+  const getDriversData = async (drivers: any) => {
     // Extract driver IDs from the drivers array
     const driverIds = drivers.map((driver: any) => driver.id).join(",");
     const response = await axios.get(
@@ -292,7 +370,7 @@ export default function RidePlanScreen() {
     setdriverLoader(false);
   };
 
-   const requestNearbyDrivers = () => {
+  const requestNearbyDrivers = () => {
     console.log(wsConnected);
     if (currentLocation && wsConnected) {
       ws.current.send(
@@ -307,13 +385,44 @@ export default function RidePlanScreen() {
     }
   };
 
-  const handleOrder = async () => {
-    const data = {
-      driver: selectedDriver|| driverLists[0],
-      user,
-      currentLocation
+  const sendPushNotification = async (expoPushToken: string, data: any) => {
+    const message = {
+      to: expoPushToken,
+      sound: "default",
+      title: "New Ride Request",
+      body: "You have a new ride request.",
+      data: { orderData: data },
     };
-    console.log(data);
+
+    await axios.post("https://exp.host/--/api/v2/push/send", message).then((res) =>{
+      console.log(res.data);
+    })
+    .catch((error)=>{
+      console.log(error);
+    })
+  };
+
+  const handleOrder = async () => {
+    const currentLocationName = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation?.latitude},${currentLocation?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+    );
+    const destinationLocationName = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker?.latitude},${marker?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+    );
+
+    const data = {
+      user,
+      currentLocation,
+      marker,
+      distance: distance.toFixed(2),
+      currentLocationName:
+        currentLocationName.data.results[0].formatted_address,
+      destinationLocation:
+        destinationLocationName.data.results[0].formatted_address,
+    };
+    const driverPushToken = "ExponentPushToken[FRelSoKvfbNhVx3Uj1hUwP]";
+
+    await sendPushNotification(driverPushToken, JSON.stringify(data));
   };
 
   return (
@@ -321,11 +430,11 @@ export default function RidePlanScreen() {
       style={[external.fx_1]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-        <View>
-            <View
-            style={{ height: windowHeight(!keyboardAvoidingHeight ? 500 : 300) }}
-            >
-            <MapView
+      <View>
+        <View
+          style={{ height: windowHeight(!keyboardAvoidingHeight ? 500 : 300) }}
+        >
+          <MapView
             style={{ flex: 1 }}
             region={region}
             onRegionChangeComplete={(region) => setRegion(region)}
@@ -342,21 +451,24 @@ export default function RidePlanScreen() {
               />
             )}
           </MapView>
-
-            </View>
-
         </View>
-        <View style={styles.contentContainer}>
-          <View style={[styles.container]}>
-           {
-            locationSelected ? (
-               <>
-               {driverLoader ?(
-                <View style={{flex:1,alignItems:"center",justifyContent:"center",height:400}}>
-                  <ActivityIndicator size={"large"}/>
-
+      </View>
+      <View style={styles.contentContainer}>
+        <View style={[styles.container]}>
+          {locationSelected ? (
+            <>
+              {driverLoader ? (
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 400,
+                  }}
+                >
+                  <ActivityIndicator size={"large"} />
                 </View>
-               ) : (
+              ) : (
                 <ScrollView
                   style={{
                     paddingBottom: windowHeight(20),
@@ -385,9 +497,8 @@ export default function RidePlanScreen() {
                     </Text>
                   </View>
                   <View style={{ padding: windowWidth(10) }}>
-                   {
-                    driverLists?.map((driver:DriverType) => (
-                       <Pressable
+                    {driverLists?.map((driver: DriverType) => (
+                      <Pressable
                         style={{
                           width: windowWidth(420),
                           borderWidth:
@@ -402,16 +513,14 @@ export default function RidePlanScreen() {
                       >
                         <View style={{ margin: "auto" }}>
                           <Image
-                          source={
-                            driver?.vehicle_type === "Car" ?
-                            require("@/assets/images/vehicles/car.png")
-                            :driver?.vehicle_type === "Motorcycle" ?
-                            require("@/assets/images/vehicles/bike.png")
-                            :require("@/assets/images/vehicles/bike.png")
-
-                          }
-                          style={{width:90,height:80}}
-                            
+                            source={
+                              driver?.vehicle_type === "Car"
+                                ? require("@/assets/images/vehicles/car.png")
+                                : driver?.vehicle_type === "Motorcycle"
+                                ? require("@/assets/images/vehicles/bike.png")
+                                : require("@/assets/images/vehicles/bike.png")
+                            }
+                            style={{ width: 90, height: 80 }}
                           />
                         </View>
                         <View
@@ -421,12 +530,13 @@ export default function RidePlanScreen() {
                             justifyContent: "space-between",
                           }}
                         >
-                           <View>
+                          <View>
                             <Text style={{ fontSize: 20, fontWeight: "600" }}>
                               RideWave {driver?.vehicle_type}
                             </Text>
-                            <Text style={{ fontSize: 16 }}>{getEstimatedArrivalTime(travelTimes.driving)} dropoff
-                              
+                            <Text style={{ fontSize: 16 }}>
+                              {getEstimatedArrivalTime(travelTimes.driving)}{" "}
+                              dropoff
                             </Text>
                           </View>
                           <Text
@@ -435,17 +545,16 @@ export default function RidePlanScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            BDT{(distance.toFixed(2)*parseInt(driver.rate)).toFixed(2)}
-                            
+                            BDT{" "}
+                            {(
+                              distance.toFixed(2) * parseInt(driver.rate)
+                            ).toFixed(2)}
                           </Text>
-
                         </View>
-
                       </Pressable>
-                    ))
-                   }
+                    ))}
 
-                       <View
+                    <View
                       style={{
                         paddingHorizontal: windowWidth(10),
                         marginTop: windowHeight(15),
@@ -455,51 +564,42 @@ export default function RidePlanScreen() {
                         backgroundColor={"#000"}
                         textColor="#fff"
                         title={`Confirm Booking`}
-                        onPress={()=> handleOrder()}
-                        
+                        onPress={() => handleOrder()}
                       />
                     </View>
                   </View>
-
-
-              </ScrollView>
-               )}
-               
-               </>
-            ):(
-              <>
-               <View style={{ flexDirection: "row", alignItems: "center"}}>
-              <TouchableOpacity onPress={()=>router.back()}>
-                <LeftArrow/>
-
-
-              </TouchableOpacity>
-              <Text 
-              style={{
-                margin:"auto",
-                fontSize:windowWidth(25),
-                fontWeight:"600",
-              }}>
-                Plan Your Ride
-              
-              
-
-              </Text>
-
-            </View>
-            {/* picking up time */}
-            <View
-            style={{
-              width:windowWidth(200),
-              height:windowHeight(28),
-              borderRadius:20,
-              backgroundColor:"#F0F0F0",
-              alignItems:"center",
-              justifyContent:"center",
-              marginVertical:windowHeight(10),
-            }}
-            >
+                </ScrollView>
+              )}
+            </>
+          ) : (
+            <>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <TouchableOpacity onPress={() => router.back()}>
+                  <LeftArrow />
+                </TouchableOpacity>
+                <Text
+                  style={{
+                    margin: "auto",
+                    fontSize: windowWidth(25),
+                    fontWeight: "600",
+                  }}
+                >
+                  Plan your ride
+                </Text>
+              </View>
+              {/* picking up time */}
+              <View
+                style={{
+                  width: windowWidth(200),
+                  height: windowHeight(28),
+                  borderRadius: 20,
+                  backgroundColor: color.lightGray,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginVertical: windowHeight(10),
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Clock />
                   <Text
                     style={{
@@ -511,11 +611,10 @@ export default function RidePlanScreen() {
                     Pick-up now
                   </Text>
                   <DownArrow />
+                </View>
               </View>
-
-            </View>
-            {/* picking up location */}
-            <View
+              {/* picking up location */}
+              <View
                 style={{
                   borderWidth: 2,
                   borderColor: "#000",
@@ -536,7 +635,7 @@ export default function RidePlanScreen() {
                       height: windowHeight(20),
                     }}
                   >
-                     <Text
+                    <Text
                       style={{
                         color: "#2371F0",
                         fontSize: 18,
@@ -545,10 +644,8 @@ export default function RidePlanScreen() {
                     >
                       Current Location
                     </Text>
-                  
+                  </View>
                 </View>
-                </View>
-
                 <View
                   style={{
                     flexDirection: "row",
@@ -563,7 +660,7 @@ export default function RidePlanScreen() {
                     }}
                   >
                     <GooglePlacesAutocomplete
-                    placeholder="Where to?"
+                      placeholder="Where to?"
                       onPress={(data, details = null) => {
                         setkeyboardAvoidingHeight(true);
                         setPlaces([
@@ -573,7 +670,7 @@ export default function RidePlanScreen() {
                           },
                         ]);
                       }}
-                       query={{
+                      query={{
                         key: `${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY!}`,
                         language: "en",
                       }}
@@ -599,15 +696,11 @@ export default function RidePlanScreen() {
                       fetchDetails={true}
                       debounce={200}
                     />
-
                   </View>
-
                 </View>
-                
-
-            </View>
-            {/* Last sessions */}
-            {places.map((place: any, index: number) => (
+              </View>
+              {/* Last sessions */}
+              {places.map((place: any, index: number) => (
                 <Pressable
                   key={index}
                   style={{
@@ -615,8 +708,7 @@ export default function RidePlanScreen() {
                     alignItems: "center",
                     marginBottom: windowHeight(20),
                   }}
-                  onPress={()=>handlePlaceSelect(place.place_id)}
-                  
+                  onPress={() => handlePlaceSelect(place.place_id)}
                 >
                   <PickUpLocation />
                   <Text style={{ paddingLeft: 15, fontSize: 18 }}>
@@ -624,20 +716,10 @@ export default function RidePlanScreen() {
                   </Text>
                 </Pressable>
               ))}
-              
-              
-              </>
-
-            )
-            
-           }
-            
-
-
-          </View>
-
+            </>
+          )}
         </View>
-
+      </View>
     </KeyboardAvoidingView>
-  )
+  );
 }
