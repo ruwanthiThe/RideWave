@@ -112,6 +112,15 @@ export default function RidePlanScreen() {
     };
   }
 
+  useEffect(() => {
+    initializeWebSocket();
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
+
   const fetchPlaces = async (input: any) => {
     try {
       const response = await axios.get(
@@ -299,13 +308,12 @@ export default function RidePlanScreen() {
   };
 
   const handleOrder = async () => {
-    
-
     const data = {
       driver: selectedDriver|| driverLists[0],
       user,
       currentLocation
-    }
+    };
+    console.log(data);
   };
 
   return (
@@ -342,7 +350,14 @@ export default function RidePlanScreen() {
           <View style={[styles.container]}>
            {
             locationSelected ? (
-               <ScrollView
+               <>
+               {driverLoader ?(
+                <View style={{flex:1,alignItems:"center",justifyContent:"center",height:400}}>
+                  <ActivityIndicator size={"large"}/>
+
+                </View>
+               ) : (
+                <ScrollView
                   style={{
                     paddingBottom: windowHeight(20),
                     height: windowHeight(280),
@@ -370,22 +385,31 @@ export default function RidePlanScreen() {
                     </Text>
                   </View>
                   <View style={{ padding: windowWidth(10) }}>
-                    <Pressable
+                   {
+                    driverLists?.map((driver:DriverType) => (
+                       <Pressable
                         style={{
                           width: windowWidth(420),
                           borderWidth:
-                            selectedVehcile === "car" ? 2 : 0,
+                            selectedVehcile === driver.vehicle_type ? 2 : 0,
                           borderRadius: 10,
                           padding: 10,
                           marginVertical: 5,
                         }}
                         onPress={() => {
-                          setselectedVehcile("car");
+                          setselectedVehcile(driver.vehicle_type);
                         }}
                       >
                         <View style={{ margin: "auto" }}>
                           <Image
-                          source={require("@/assets/images/vehicles/car.png")}
+                          source={
+                            driver?.vehicle_type === "Car" ?
+                            require("@/assets/images/vehicles/car.png")
+                            :driver?.vehicle_type === "Motorcycle" ?
+                            require("@/assets/images/vehicles/bike.png")
+                            :require("@/assets/images/vehicles/bike.png")
+
+                          }
                           style={{width:90,height:80}}
                             
                           />
@@ -399,7 +423,7 @@ export default function RidePlanScreen() {
                         >
                            <View>
                             <Text style={{ fontSize: 20, fontWeight: "600" }}>
-                              RideWave X
+                              RideWave {driver?.vehicle_type}
                             </Text>
                             <Text style={{ fontSize: 16 }}>{getEstimatedArrivalTime(travelTimes.driving)} dropoff
                               
@@ -411,15 +435,15 @@ export default function RidePlanScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            LKR{" "}
-                            {(
-                              distance.toFixed(2) * 45
-                            ).toFixed(2)}
+                            BDT{(distance.toFixed(2)*parseInt(driver.rate)).toFixed(2)}
+                            
                           </Text>
 
                         </View>
 
                       </Pressable>
+                    ))
+                   }
 
                        <View
                       style={{
@@ -431,6 +455,7 @@ export default function RidePlanScreen() {
                         backgroundColor={"#000"}
                         textColor="#fff"
                         title={`Confirm Booking`}
+                        onPress={()=> handleOrder()}
                         
                       />
                     </View>
@@ -438,6 +463,9 @@ export default function RidePlanScreen() {
 
 
               </ScrollView>
+               )}
+               
+               </>
             ):(
               <>
                <View style={{ flexDirection: "row", alignItems: "center"}}>
