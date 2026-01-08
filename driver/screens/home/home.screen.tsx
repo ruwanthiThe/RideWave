@@ -26,18 +26,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as GeoLocation from "expo-location";
 import { Toast } from "react-native-toast-notifications";
 import { useGetDriverData } from "@/hooks/useGetDriverData";
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import Constants from "expo-constants";
-
-
 import { router } from "expo-router";
 
-
 export default function HomeScreen() {
-  const { driver, loading: DriverDataLoading } = useGetDriverData();
   const notificationListener = useRef<any>();
-  const [isOn, setIsOn] = React.useState<any>(false);
+  const { driver, loading: DriverDataLoading } = useGetDriverData();
+  const [userData, setUserData] = useState<any>(null);
+  const [isOn, setIsOn] = useState<any>();
   const [loading, setloading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [region, setRegion] = useState<any>({
@@ -46,29 +44,27 @@ export default function HomeScreen() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-
+  const [currentLocationName, setcurrentLocationName] = useState("");
+  const [destinationLocationName, setdestinationLocationName] = useState("");
+  const [distance, setdistance] = useState<any>();
   const [wsConnected, setWsConnected] = useState(false);
   const [marker, setMarker] = useState<any>(null);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
-  const [distance,setdistance] = useState<any>();
-  const [lastLocation,setLastLocation] = useState<any>(null);
-  const [currentLocationName, setcurrentLocationName] = useState("");
-  const [destinationLocationName, setdestinationLocationName] = useState("");
-
+  const [lastLocation, setLastLocation] = useState<any>(null);
+  const [recentRides, setrecentRides] = useState([]);
   const ws = new WebSocket("ws://192.168.1.7:5000");
 
   const { colors } = useTheme();
-
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
       shouldPlaySound: true,
-      shouldSetBadge: true,
+      shouldSetBadge: false,
     }),
   });
 
-    useEffect(() => {
+  useEffect(() => {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         // Handle the notification and extract data
@@ -103,7 +99,7 @@ export default function HomeScreen() {
         setdistance(orderData.distance);
         setcurrentLocationName(orderData.currentLocationName);
         setdestinationLocationName(orderData.destinationLocation);
-        //setUserData(orderData.user);
+        setUserData(orderData.user);
       });
 
     return () => {
@@ -113,50 +109,15 @@ export default function HomeScreen() {
     };
   }, []);
 
-
-
-
-
-
   useEffect(() => {
     const fetchStatus = async () => {
-      const status = await AsyncStorage.getItem("status");
+      const status: any = await AsyncStorage.getItem("status");
       setIsOn(status === "active" ? true : false);
-      
     };
     fetchStatus();
   }, []);
 
-
-   // socket updates
   useEffect(() => {
-    ws.onopen = () => {
-      console.log("Connected to WebSocket server");
-      setWsConnected(true);
-    };
-
-    ws.onmessage = (e) => {
-      const message = JSON.parse(e.data);
-      console.log("Received message:", message);
-      // Handle received location updates here
-    };
-
-    ws.onerror = (e: any) => {
-      console.log("WebSocket error:", e.message);
-    };
-
-    ws.onclose = (e) => {
-      console.log("WebSocket closed:", e.code, e.reason);
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, []);
-
-
-
-    useEffect(() => {
     registerForPushNotificationsAsync();
   }, []);
 
@@ -201,22 +162,91 @@ export default function HomeScreen() {
         type: "danger",
       });
     }
+
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
   }
-   const sendLocationUpdate = async (location: any) => {
-     if (ws.readyState === WebSocket.OPEN) {
+
+  // socket updates
+  useEffect(() => {
+    ws.onopen = () => {
+      console.log("Connected to WebSocket server");
+      setWsConnected(true);
+    };
+
+    ws.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      console.log("Received message:", message);
+      // Handle received location updates here
+    };
+
+    ws.onerror = (e: any) => {
+      console.log("WebSocket error:", e.message);
+    };
+
+    ws.onclose = (e) => {
+      console.log("WebSocket closed:", e.code, e.reason);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  const haversineDistance = (coords1: any, coords2: any) => {
+    const toRad = (x: any) => (x * Math.PI) / 180;
+
+    const R = 6371e3; // Radius of the Earth in meters
+    const lat1 = toRad(coords1.latitude);
+    const lat2 = toRad(coords2.latitude);
+    const deltaLat = toRad(coords2.latitude - coords1.latitude);
+    const deltaLon = toRad(coords2.longitude - coords1.longitude);
+
+    const a =
+      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+      Math.cos(lat1) *
+        Math.cos(lat2) *
+        Math.sin(deltaLon / 2) *
+        Math.sin(deltaLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c; // Distance in meters
+    return distance;
+  };
+
+  const sendLocationUpdate = async (location: any) => {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    await axios
+      .get(`${process.env.EXPO_PUBLIC_SERVER_URI}/driver/me`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((res) => {
+        if (res.data) {
+          if (ws.readyState === WebSocket.OPEN) {
             const message = JSON.stringify({
               type: "locationUpdate",
               data: location,
               role: "driver",
-              driver: driver?.id,
+              driver: res.data.driver.id!,
             });
             ws.send(message);
           }
-   };
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
-
-
-    useEffect(() => {
+  useEffect(() => {
     (async () => {
       let { status } = await GeoLocation.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -232,24 +262,44 @@ export default function HomeScreen() {
         },
         async (position) => {
           const { latitude, longitude } = position.coords;
-          setCurrentLocation({ latitude, longitude });
-          if(driver && wsConnected){
-            sendLocationUpdate({ latitude, longitude } );
+          const newLocation = { latitude, longitude };
+          if (
+            !lastLocation ||
+            haversineDistance(lastLocation, newLocation) > 200
+          ) {
+            setCurrentLocation(newLocation);
+            setLastLocation(newLocation);
+            if (driver && wsConnected) {
+              await sendLocationUpdate(newLocation);
+            }
           }
         }
       );
     })();
-  }, [driver]);
+  }, []);
 
+  const getRecentRides = async () => {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    const res = await axios.get(
+      `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/get-rides`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    setrecentRides(res.data.rides);
+  };
 
-  
+  useEffect(() => {
+    getRecentRides();
+  }, []);
+
   const handleClose = () => {
     setIsModalVisible(false);
   };
 
-   const handleStatusChange = async () => {
-   await AsyncStorage.getItem("status");
-    
+  const handleStatusChange = async () => {
     if (!loading) {
       setloading(true);
       const accessToken = await AsyncStorage.getItem("accessToken");
@@ -266,7 +316,6 @@ export default function HomeScreen() {
       );
       if (changeStatus.data) {
         setIsOn(!isOn);
-        
         await AsyncStorage.setItem("status", changeStatus.data.driver.status);
         setloading(false);
       } else {
@@ -275,44 +324,97 @@ export default function HomeScreen() {
     }
   };
 
+  const sendPushNotification = async (expoPushToken: string, data: any) => {
+    const message = {
+      to: expoPushToken,
+      sound: "default",
+      title: "Ride Request Accepted!",
+      body: `Your driver is on the way!`,
+      data: { orderData: data },
+    };
+    await axios
+      .post("https://exp.host/--/api/v2/push/send", message)
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
-   return (
-    <View style={styles.container}>
+  const acceptRideHandler = async () => {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    await axios
+      .post(
+        `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/new-ride`,
+        {
+          userId: userData?.id!,
+          charge: (distance * parseInt(driver?.rate!)).toFixed(2),
+          status: "Processing",
+          currentLocationName,
+          destinationLocationName,
+          distance,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+      .then(async (res) => {
+        const data = {
+          ...driver,
+          currentLocation,
+          marker,
+          distance,
+        };
+        const driverPushToken = "ExponentPushToken[FRelSoKvfbNhVx3Uj1hUwP]";
+
+        await sendPushNotification(driverPushToken, data);
+
+        const rideData = {
+          user: userData,
+          currentLocation,
+          marker,
+          driver,
+          distance,
+          rideData: res.data.newRide,
+        };
+        router.push({
+          pathname: "/(routes)/ride-details",
+          params: { orderData: JSON.stringify(rideData) },
+        });
+      });
+  };
+
+  return (
+    <View style={[external.fx_1]}>
       <View style={styles.spaceBelow}>
-        <Header isOn={isOn} toggleSwitch={()=> handleStatusChange()} />
-         <FlatList
+        <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} />
+        <FlatList
           data={rideData}
           numColumns={2}
           renderItem={({ item }) => (
             <RenderRideItem item={item} colors={colors} />
           )}
         />
-
         <View style={[styles.rideContainer, { backgroundColor: colors.card }]}>
-          <Text style={[styles.rideTitle, { color: colors.text }]}
-          onPress={()=>setIsModalVisible(true)}
-          >
+          <Text style={[styles.rideTitle, { color: colors.text }]}>
             Recent Rides
           </Text>
-          <FlatList
-            data={recentRidesData}
-            renderItem={({ item }) => <RideCard item={item} />}
-          />
+          <ScrollView>
+            {recentRides?.map((item: any, index: number) => (
+              <RideCard item={item} key={index} />
+            ))}
+            {recentRides?.length === 0 && (
+              <Text>You didn't take any ride yet!</Text>
+            )}
+          </ScrollView>
         </View>
-         
       </View>
-      <Modal 
-      transparent={true}
-      visible={isModalVisible}
-      onRequestClose={handleClose}
-      
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={handleClose}
       >
-
-        <TouchableOpacity
-        style={styles.modalBackground}
-        onPress={handleClose}
-        activeOpacity={1}
-        >
+        <TouchableOpacity style={styles.modalBackground} activeOpacity={1}>
           <TouchableOpacity style={styles.modalContainer} activeOpacity={1}>
             <View>
               <Text style={styles.modalTitle}>New Ride Request Received!</Text>
@@ -346,21 +448,21 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.rightView}>
                   <Text style={[styles.pickup, { color: colors.text }]}>
-                    Green line bus stand,Rajar Bag,Dhaka{""}
+                    {currentLocationName}
                   </Text>
                   <View style={styles.border} />
                   <Text style={[styles.drop, { color: colors.text }]}>
-                    Gulshan 3,Road no 5,Block C,Dhaka
+                    {destinationLocationName}
                   </Text>
                 </View>
-                </View>
-                 <Text
+              </View>
+              <Text
                 style={{
                   paddingTop: windowHeight(5),
                   fontSize: windowHeight(14),
                 }}
               >
-                Distance: 9.4 km
+                Distance: {distance} km
               </Text>
               <Text
                 style={{
@@ -369,7 +471,8 @@ export default function HomeScreen() {
                   fontSize: windowHeight(14),
                 }}
               >
-                Amount:138 BDT
+                Amount:
+                {(distance * parseInt(driver?.rate!)).toFixed(2)} BDT
               </Text>
               <View
                 style={{
@@ -387,18 +490,15 @@ export default function HomeScreen() {
                 />
                 <Button
                   title="Accept"
-                  
+                  onPress={() => acceptRideHandler()}
                   width={windowWidth(120)}
                   height={windowHeight(30)}
                 />
               </View>
             </View>
-
           </TouchableOpacity>
-
         </TouchableOpacity>
-
       </Modal>
     </View>
-  )
+  );
 }
