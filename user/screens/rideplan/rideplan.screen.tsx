@@ -33,6 +33,8 @@ import { useGetUserData } from "@/hooks/useGetUserData";
 
 import Constants from "expo-constants";
 
+
+
 export default function RidePlanScreen() {
   const { user } = useGetUserData();
   const ws = useRef<any>(null);
