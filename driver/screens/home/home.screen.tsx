@@ -26,13 +26,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as GeoLocation from "expo-location";
 import { Toast } from "react-native-toast-notifications";
 import { useGetDriverData } from "@/hooks/useGetDriverData";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import Constants from "expo-constants";
+
 
 import { router } from "expo-router";
 
 
 export default function HomeScreen() {
   const { driver, loading: DriverDataLoading } = useGetDriverData();
+  const notificationListener = useRef<any>();
   const [isOn, setIsOn] = React.useState<any>(false);
   const [loading, setloading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -46,8 +50,73 @@ export default function HomeScreen() {
   const [wsConnected, setWsConnected] = useState(false);
   const [marker, setMarker] = useState<any>(null);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const [distance,setdistance] = useState<any>();
+  const [lastLocation,setLastLocation] = useState<any>(null);
+  const [currentLocationName, setcurrentLocationName] = useState("");
+  const [destinationLocationName, setdestinationLocationName] = useState("");
+
   const ws = new WebSocket("ws://192.168.1.7:5000");
+
   const { colors } = useTheme();
+
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+
+    useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        // Handle the notification and extract data
+        const orderData = JSON.parse(
+          notification.request.content.data.orderData
+        );
+        setIsModalVisible(true);
+        setCurrentLocation({
+          latitude: orderData.currentLocation.latitude,
+          longitude: orderData.currentLocation.longitude,
+        });
+        setMarker({
+          latitude: orderData.marker.latitude,
+          longitude: orderData.marker.longitude,
+        });
+        setRegion({
+          latitude:
+            (orderData.currentLocation.latitude + orderData.marker.latitude) /
+            2,
+          longitude:
+            (orderData.currentLocation.longitude + orderData.marker.longitude) /
+            2,
+          latitudeDelta:
+            Math.abs(
+              orderData.currentLocation.latitude - orderData.marker.latitude
+            ) * 2,
+          longitudeDelta:
+            Math.abs(
+              orderData.currentLocation.longitude - orderData.marker.longitude
+            ) * 2,
+        });
+        setdistance(orderData.distance);
+        setcurrentLocationName(orderData.currentLocationName);
+        setdestinationLocationName(orderData.destinationLocation);
+        //setUserData(orderData.user);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+    };
+  }, []);
+
+
+
+
+
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -86,6 +155,53 @@ export default function HomeScreen() {
   }, []);
 
 
+
+    useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        Toast.show("Failed to get push token for push notification!", {
+          type: "danger",
+        });
+        return;
+      }
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ??
+        Constants?.easConfig?.projectId;
+      if (!projectId) {
+        Toast.show("Failed to get project id for push notification!", {
+          type: "danger",
+        });
+      }
+      try {
+        const pushTokenString = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log(pushTokenString);
+        // return pushTokenString;
+      } catch (e: unknown) {
+        Toast.show(`${e}`, {
+          type: "danger",
+        });
+      }
+    } else {
+      Toast.show("Must use physical device for Push Notifications", {
+        type: "danger",
+      });
+    }
+  }
    const sendLocationUpdate = async (location: any) => {
      if (ws.readyState === WebSocket.OPEN) {
             const message = JSON.stringify({
