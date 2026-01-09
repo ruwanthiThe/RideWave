@@ -498,60 +498,60 @@ export default function RidePlanScreen() {
                   </View>
                   <View style={{ padding: windowWidth(10) }}>
                     {driverLists?.map((driver: DriverType) => (
-                      <Pressable
-                        style={{
-                          width: windowWidth(420),
-                          borderWidth:
-                            selectedVehcile === driver.vehicle_type ? 2 : 0,
-                          borderRadius: 10,
-                          padding: 10,
-                          marginVertical: 5,
-                        }}
-                        onPress={() => {
-                          setselectedVehcile(driver.vehicle_type);
-                        }}
-                      >
-                        <View style={{ margin: "auto" }}>
-                          <Image
-                            source={
-                              driver?.vehicle_type === "Car"
-                                ? require("@/assets/images/vehicles/car.png")
-                                : driver?.vehicle_type === "Motorcycle"
-                                ? require("@/assets/images/vehicles/bike.png")
-                                : require("@/assets/images/vehicles/bike.png")
-                            }
-                            style={{ width: 90, height: 80 }}
-                          />
-                        </View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <View>
-                            <Text style={{ fontSize: 20, fontWeight: "600" }}>
-                              RideWave {driver?.vehicle_type}
-                            </Text>
-                            <Text style={{ fontSize: 16 }}>
-                              {getEstimatedArrivalTime(travelTimes.driving)}{" "}
-                              dropoff
-                            </Text>
-                          </View>
-                          <Text
-                            style={{
-                              fontSize: windowWidth(20),
-                              fontWeight: "600",
-                            }}
-                          >
-                            BDT{" "}
-                            {(
-                              distance.toFixed(2) * parseInt(driver.rate)
-                            ).toFixed(2)}
-                          </Text>
-                        </View>
-                      </Pressable>
+                        <Pressable
+    key={`${driver.vehicle_type}-${driver.rate}`}
+    style={{
+      width: windowWidth(420),
+      borderWidth:
+        selectedVehcile === driver.vehicle_type ? 2 : 0,
+      borderRadius: 10,
+      padding: 10,
+      marginVertical: 5,
+    }}
+    onPress={() => {
+      setselectedVehcile(driver.vehicle_type);
+    }}
+  >
+    <View style={{ margin: "auto" }}>
+      <Image
+        source={
+          driver?.vehicle_type === "Car"
+            ? require("@/assets/images/vehicles/car.png")
+            : require("@/assets/images/vehicles/bike.png")
+        }
+        style={{ width: 90, height: 80 }}
+      />
+    </View>
+
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <View>
+        <Text style={{ fontSize: 20, fontWeight: "600" }}>
+          RideWave {driver?.vehicle_type}
+        </Text>
+        <Text style={{ fontSize: 16 }}>
+          {getEstimatedArrivalTime(travelTimes.driving)} dropoff
+        </Text>
+      </View>
+
+      <Text
+        style={{
+          fontSize: windowWidth(20),
+          fontWeight: "600",
+        }}
+      >
+        BDT{" "}
+        {(
+          distance.toFixed(2) * parseInt(driver.rate)
+        ).toFixed(2)}
+      </Text>
+    </View>
+  </Pressable>
                     ))}
 
                     <View
