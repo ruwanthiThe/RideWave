@@ -248,36 +248,43 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    (async () => {
-      let { status } = await GeoLocation.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Toast.show("Please give us to access your location to use this app!");
-        return;
-      }
+  if (!driver || !wsConnected) return; // wait for both
 
-      await GeoLocation.watchPositionAsync(
-        {
-          accuracy: GeoLocation.Accuracy.High,
-          timeInterval: 1000,
-          distanceInterval: 1,
-        },
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const newLocation = { latitude, longitude };
-          if (
-            !lastLocation ||
-            haversineDistance(lastLocation, newLocation) > 200
-          ) {
-            setCurrentLocation(newLocation);
-            setLastLocation(newLocation);
-            if (driver && wsConnected) {
-              await sendLocationUpdate(newLocation);
-            }
+  let subscription: any;
+
+  (async () => {
+    const { status } = await GeoLocation.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      Toast.show("Please give us access to your location!");
+      return;
+    }
+
+    subscription = await GeoLocation.watchPositionAsync(
+      {
+        accuracy: GeoLocation.Accuracy.High,
+        timeInterval: 1000,
+        distanceInterval: 1,
+      },
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLocation = { latitude, longitude };
+
+        if (!lastLocation || haversineDistance(lastLocation, newLocation) > 200) {
+          setCurrentLocation(newLocation);
+          setLastLocation(newLocation);
+
+          if (ws.readyState === WebSocket.OPEN) {
+            await sendLocationUpdate(newLocation);
           }
         }
-      );
-    })();
-  }, []);
+      }
+    );
+  })();
+
+  return () => {
+    if (subscription) subscription.remove();
+  };
+}, [driver, wsConnected]); // <--- important
 
   const getRecentRides = async () => {
     const accessToken = await AsyncStorage.getItem("accessToken");
