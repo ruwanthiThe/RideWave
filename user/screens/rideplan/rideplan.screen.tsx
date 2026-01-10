@@ -172,6 +172,7 @@ export default function RidePlanScreen() {
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ??
         Constants?.easConfig?.projectId;
+        
       if (!projectId) {
         Toast.show("Failed to get project id for push notification!", {
           type: "danger",
@@ -401,29 +402,60 @@ export default function RidePlanScreen() {
       console.log(error);
     })
   };
+  
 
   const handleOrder = async () => {
+  console.log("handleOrder started");
+
+  try {
+    console.log("Current location:", currentLocation);
+    console.log("Marker location:", marker);
+
+    if (!currentLocation || !marker) {
+      console.log("Missing location data");
+      return;
+    }
+
+    console.log("Fetching current location name...");
     const currentLocationName = await axios.get(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation?.latitude},${currentLocation?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.latitude},${currentLocation.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
     );
+    console.log(currentLocationName.data.status);
+    console.log(currentLocationName.data);
+
+    
+
+    console.log("Fetching destination location name...");
     const destinationLocationName = await axios.get(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker?.latitude},${marker?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker.latitude},${marker.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
     );
+
+    
 
     const data = {
       user,
       currentLocation,
       marker,
-      distance: distance.toFixed(2),
+      distance: distance?.toFixed(2),
       currentLocationName:
-        currentLocationName.data.results[0].formatted_address,
-      destinationLocation:
-        destinationLocationName.data.results[0].formatted_address,
+        currentLocationName.data.results?.[0]?.formatted_address || "Unknown location",
+      destinationLocationName:
+        destinationLocationName.data.results?.[0]?.formatted_address || "Unknown location",
     };
-    const driverPushToken = "ExponentPushToken[FRelSoKvfbNhVx3Uj1hUwP]";
 
-    await sendPushNotification(driverPushToken, JSON.stringify(data));
-  };
+    console.log("DATA TO SEND:", data);
+
+    const driverPushToken = "ExponentPushToken[3CjRb5FFd-wZHQpna15Z7d]";
+
+    console.log("Sending push notification...");
+    await sendPushNotification(driverPushToken, data);
+
+    console.log("handleOrder finished successfully");
+  } catch (error) {
+    console.log("ERROR in handleOrder:", error);
+  }
+};
+
 
   return (
     <KeyboardAvoidingView
@@ -564,7 +596,10 @@ export default function RidePlanScreen() {
                         backgroundColor={"#000"}
                         textColor="#fff"
                         title={`Confirm Booking`}
-                        onPress={() => handleOrder()}
+                        onPress={() => {
+    console.log("Confirm Booking button clicked");
+    handleOrder();
+  }}
                       />
                     </View>
                   </View>

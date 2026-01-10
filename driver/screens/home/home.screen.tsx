@@ -68,10 +68,10 @@ export default function HomeScreen() {
   useEffect(() => {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
+        console.log("DRIVER RECEIVED PUSH:", notification);
         // Handle the notification and extract data
-        const orderData = JSON.parse(
-          notification.request.content.data.orderData
-        );
+        const orderData = notification.request.content.data.orderData;
+
         setIsModalVisible(true);
         setCurrentLocation({
           latitude: orderData.currentLocation.latitude,
@@ -99,7 +99,7 @@ export default function HomeScreen() {
         });
         setdistance(orderData.distance);
         setcurrentLocationName(orderData.currentLocationName);
-        setdestinationLocationName(orderData.destinationLocation);
+        setdestinationLocationName(orderData.destinationLocationName);
         setUserData(orderData.user);
       });
 
@@ -373,8 +373,8 @@ export default function HomeScreen() {
           marker,
           distance,
         };
-        const driverPushToken = "ExponentPushToken[FRelSoKvfbNhVx3Uj1hUwP]";
-
+        const driverPushToken = "ExponentPushToken[XeWE1EPuFcJ7HPJw2PuDuS]";
+//XeWE1EPuFcJ7HPJw2PuDuS
         await sendPushNotification(driverPushToken, data);
 
         const rideData = {
