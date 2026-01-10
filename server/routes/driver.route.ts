@@ -7,6 +7,8 @@ import {
   newRide,
   verifyingEmailOtpDriver,
   getLoggedInDriverData,
+  updatingRideStatus,
+  getAllRides,
   updateDriverStatus,
   getDriversById,
 } from "../controllers/driver.controller";
@@ -30,6 +32,15 @@ driverRouter.get("/get-drivers-data", getDriversById);
 driverRouter.put("/update-status", isAuthenticatedDriver, updateDriverStatus);
 
 driverRouter.post("/new-ride", isAuthenticatedDriver, newRide);
+
+driverRouter.put(
+  "/update-ride-status",
+  isAuthenticatedDriver,
+  updatingRideStatus
+);
+
+driverRouter.get("/get-rides", isAuthenticatedDriver, getAllRides);
+
 
 
 

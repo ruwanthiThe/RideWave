@@ -227,5 +227,94 @@ export const newRide = async (req: any, res: Response) => {
   }
 };
 
+// updating ride status
+export const updatingRideStatus = async (req: any, res: Response) => {
+  try {
+    const { rideId, rideStatus } = req.body;
+
+    // Validate input
+    if (!rideId || !rideStatus) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid input data" });
+    }
+
+    const driverId = req.driver?.id;
+    if (!driverId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch the ride data to get the rideCharge
+    const ride = await prisma.rides.findUnique({
+      where: {
+        id: rideId,
+      },
+    });
+
+    if (!ride) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Ride not found" });
+    }
+
+    const rideCharge = ride.charge;
+
+    // Update ride status
+    const updatedRide = await prisma.rides.update({
+      where: {
+        id: rideId,
+        driverId,
+      },
+      data: {
+        status: rideStatus,
+      },
+    });
+
+    if (rideStatus === "Completed") {
+      // Update driver stats if the ride is completed
+      await prisma.driver.update({
+        where: {
+          id: driverId,
+        },
+        data: {
+          totalEarning: {
+            increment: rideCharge,
+          },
+          totalRides: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      updatedRide,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// getting drivers rides
+export const getAllRides = async (req: any, res: Response) => {
+  const rides = await prisma.rides.findMany({
+    where: {
+      driverId: req.driver?.id,
+    },
+    include: {
+      driver: true,
+      user: true,
+    },
+  });
+  res.status(201).json({
+    rides,
+  });
+};
+
 
 
