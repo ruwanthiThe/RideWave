@@ -272,19 +272,15 @@ export const updatingRideStatus = async (req: any, res: Response) => {
 
     if (rideStatus === "Completed") {
       // Update driver stats if the ride is completed
-      await prisma.driver.update({
-        where: {
-          id: driverId,
-        },
-        data: {
-          totalEarning: {
-            increment: rideCharge,
-          },
-          totalRides: {
-            increment: 1,
-          },
-        },
-      });
+      if (ride.status !== "Completed" && rideStatus === "Completed") {
+  await prisma.driver.update({
+    where: { id: driverId },
+    data: {
+      totalEarning: { increment: rideCharge },
+      totalRides: { increment: 1 },
+    },
+  });
+}
     }
 
     res.status(201).json({
