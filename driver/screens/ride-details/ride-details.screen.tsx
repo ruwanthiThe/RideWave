@@ -144,7 +144,7 @@ export default function RideDetailsScreen() {
         >
           Payable amount:{" "}
           {(orderData.distance * parseInt(orderData?.driver?.rate)).toFixed(2)}{" "}
-          BDT
+          LKR
         </Text>
 
         <View style={{ paddingTop: windowHeight(30) }}>

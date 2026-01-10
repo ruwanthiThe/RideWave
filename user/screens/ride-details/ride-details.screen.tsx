@@ -119,7 +119,7 @@ export default function RideDetailsScreen() {
           {(
             orderData.driver?.distance * parseInt(orderData?.driver?.rate)
           ).toFixed(2)}{" "}
-          BDT
+          LKR
         </Text>
         <Text
           style={{

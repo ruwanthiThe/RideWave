@@ -38,7 +38,7 @@ export const slides = [
 ];
 
 export const rideData = [
-  { id: "1", totalEarning: "Bdt 1200", title: "Total Earning" },
+  { id: "1", totalEarning: "LKR 1200", title: "Total Earning" },
   { id: "2", totalEarning: "12", title: "Complete Ride" },
   { id: "3", totalEarning: "1", title: "Pending Ride" },
   { id: "4", totalEarning: "04", title: "Cancel Ride" },

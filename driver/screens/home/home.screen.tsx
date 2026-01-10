@@ -411,7 +411,7 @@ const acceptRideHandler = async () => {
         )}
       />
 
-      {/* ✅ RECENT RIDES WITH SCROLL */}
+      {/* RECENT RIDES WITH SCROLL */}
       <View style={[styles.rideContainer, { backgroundColor: colors.card }]}>
         <Text style={[styles.rideTitle, { color: colors.text }]}>
           Recent Rides
@@ -420,7 +420,7 @@ const acceptRideHandler = async () => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled={true}
-          style={{ maxHeight: windowHeight(250) }} // 🔥 REQUIRED
+          style={{ maxHeight: windowHeight(250) }} 
         >
           {recentRides?.map((item: any, index: number) => (
             <RideCard item={item} key={index} />
@@ -504,7 +504,7 @@ const acceptRideHandler = async () => {
               }}
             >
               Amount:
-              {(distance * parseInt(driver?.rate!)).toFixed(2)} BDT
+              {(distance * parseInt(driver?.rate!)).toFixed(2)} LKR
             </Text>
 
             <View

@@ -577,7 +577,7 @@ export default function RidePlanScreen() {
           fontWeight: "600",
         }}
       >
-        BDT{" "}
+        LKR{" "}
         {(
           distance.toFixed(2) * parseInt(driver.rate)
         ).toFixed(2)}
