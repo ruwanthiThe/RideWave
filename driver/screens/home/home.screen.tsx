@@ -398,121 +398,141 @@ const acceptRideHandler = async () => {
 };
 
 
-  return (
-    <View style={[external.fx_1]}>
-      <View style={styles.spaceBelow}>
-        <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} />
-        <FlatList
-          data={rideData}
-          numColumns={2}
-          renderItem={({ item }) => (
-            <RenderRideItem item={item} colors={colors} />
+ return (
+  <View style={[external.fx_1]}>
+    <View style={styles.spaceBelow}>
+      <Header isOn={isOn} toggleSwitch={() => handleStatusChange()} />
+
+      <FlatList
+        data={rideData}
+        numColumns={2}
+        renderItem={({ item }) => (
+          <RenderRideItem item={item} colors={colors} />
+        )}
+      />
+
+      {/* ✅ RECENT RIDES WITH SCROLL */}
+      <View style={[styles.rideContainer, { backgroundColor: colors.card }]}>
+        <Text style={[styles.rideTitle, { color: colors.text }]}>
+          Recent Rides
+        </Text>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          style={{ maxHeight: windowHeight(250) }} // 🔥 REQUIRED
+        >
+          {recentRides?.map((item: any, index: number) => (
+            <RideCard item={item} key={index} />
+          ))}
+
+          {recentRides?.length === 0 && (
+            <Text>You didn't take any ride yet!</Text>
           )}
-        />
-        <View style={[styles.rideContainer, { backgroundColor: colors.card }]}>
-          <Text style={[styles.rideTitle, { color: colors.text }]}>
-            Recent Rides
-          </Text>
-          <ScrollView>
-            {recentRides?.map((item: any, index: number) => (
-              <RideCard item={item} key={index} />
-            ))}
-            {recentRides?.length === 0 && (
-              <Text>You didn't take any ride yet!</Text>
-            )}
-          </ScrollView>
-        </View>
+        </ScrollView>
       </View>
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={handleClose}
-      >
-        <TouchableOpacity style={styles.modalBackground} activeOpacity={1}>
-          <TouchableOpacity style={styles.modalContainer} activeOpacity={1}>
-            <View>
-              <Text style={styles.modalTitle}>New Ride Request Received!</Text>
-              <MapView
-                style={{ height: windowHeight(180) }}
-                region={region}
-                onRegionChangeComplete={(region) => setRegion(region)}
-              >
-                {marker && <Marker coordinate={marker} />}
-                {currentLocation && <Marker coordinate={currentLocation} />}
-                {currentLocation && marker && (
-                  <MapViewDirections
-                    origin={currentLocation}
-                    destination={marker}
-                    apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY!}
-                    strokeWidth={4}
-                    strokeColor="blue"
-                  />
-                )}
-              </MapView>
-              <View style={{ flexDirection: "row" }}>
-                <View style={styles.leftView}>
-                  <Location color={colors.text} />
-                  <View
-                    style={[
-                      styles.verticaldot,
-                      { borderColor: color.buttonBg },
-                    ]}
-                  />
-                  <Gps colors={colors.text} />
-                </View>
-                <View style={styles.rightView}>
-                  <Text style={[styles.pickup, { color: colors.text }]}>
-                    {currentLocationName}
-                  </Text>
-                  <View style={styles.border} />
-                  <Text style={[styles.drop, { color: colors.text }]}>
-                    {destinationLocationName}
-                  </Text>
-                </View>
+    </View>
+
+    {/* ===== MODAL ===== */}
+    <Modal
+      transparent={true}
+      visible={isModalVisible}
+      onRequestClose={handleClose}
+    >
+      <TouchableOpacity style={styles.modalBackground} activeOpacity={1}>
+        <TouchableOpacity style={styles.modalContainer} activeOpacity={1}>
+          <View>
+            <Text style={styles.modalTitle}>
+              New Ride Request Received!
+            </Text>
+
+            <MapView
+              style={{ height: windowHeight(180) }}
+              region={region}
+              onRegionChangeComplete={(region) => setRegion(region)}
+            >
+              {marker && <Marker coordinate={marker} />}
+              {currentLocation && <Marker coordinate={currentLocation} />}
+              {currentLocation && marker && (
+                <MapViewDirections
+                  origin={currentLocation}
+                  destination={marker}
+                  apikey={process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY!}
+                  strokeWidth={4}
+                  strokeColor="blue"
+                />
+              )}
+            </MapView>
+
+            <View style={{ flexDirection: "row" }}>
+              <View style={styles.leftView}>
+                <Location color={colors.text} />
+                <View
+                  style={[
+                    styles.verticaldot,
+                    { borderColor: color.buttonBg },
+                  ]}
+                />
+                <Gps colors={colors.text} />
               </View>
-              <Text
-                style={{
-                  paddingTop: windowHeight(5),
-                  fontSize: windowHeight(14),
-                }}
-              >
-                Distance: {distance} km
-              </Text>
-              <Text
-                style={{
-                  paddingVertical: windowHeight(5),
-                  paddingBottom: windowHeight(5),
-                  fontSize: windowHeight(14),
-                }}
-              >
-                Amount:
-                {(distance * parseInt(driver?.rate!)).toFixed(2)} BDT
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginVertical: windowHeight(5),
-                }}
-              >
-                <Button
-                  title="Decline"
-                  onPress={handleClose}
-                  width={windowWidth(120)}
-                  height={windowHeight(30)}
-                  backgroundColor="crimson"
-                />
-                <Button
-                  title="Accept"
-                  onPress={() => acceptRideHandler()}
-                  width={windowWidth(120)}
-                  height={windowHeight(30)}
-                />
+
+              <View style={styles.rightView}>
+                <Text style={[styles.pickup, { color: colors.text }]}>
+                  {currentLocationName}
+                </Text>
+                <View style={styles.border} />
+                <Text style={[styles.drop, { color: colors.text }]}>
+                  {destinationLocationName}
+                </Text>
               </View>
             </View>
-          </TouchableOpacity>
+
+            <Text
+              style={{
+                paddingTop: windowHeight(5),
+                fontSize: windowHeight(14),
+              }}
+            >
+              Distance: {distance} km
+            </Text>
+
+            <Text
+              style={{
+                paddingVertical: windowHeight(5),
+                paddingBottom: windowHeight(5),
+                fontSize: windowHeight(14),
+              }}
+            >
+              Amount:
+              {(distance * parseInt(driver?.rate!)).toFixed(2)} BDT
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginVertical: windowHeight(5),
+              }}
+            >
+              <Button
+                title="Decline"
+                onPress={handleClose}
+                width={windowWidth(120)}
+                height={windowHeight(30)}
+                backgroundColor="crimson"
+              />
+              <Button
+                title="Accept"
+                onPress={() => acceptRideHandler()}
+                width={windowWidth(120)}
+                height={windowHeight(30)}
+              />
+            </View>
+          </View>
         </TouchableOpacity>
-      </Modal>
-    </View>
-  );
+      </TouchableOpacity>
+    </Modal>
+  </View>
+);
+
 }

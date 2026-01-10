@@ -390,3 +390,19 @@ export const getLoggedInUserData = async (req: any, res: Response) => {
     console.log(error);
   }
 };
+
+// getting user rides
+export const getAllRides = async (req: any, res: Response) => {
+  const rides = await prisma.rides.findMany({
+    where: {
+      userId: req.user?.id,
+    },
+    include: {
+      driver: true,
+      user: true,
+    },
+  });
+  res.status(201).json({
+    rides,
+  });
+};

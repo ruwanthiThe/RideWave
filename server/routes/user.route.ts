@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getLoggedInUserData,
+  getAllRides,
   registerUser,
   sendingOtpToEmail,
   signupNewUser,
@@ -23,5 +24,7 @@ userRouter.post("/email-otp-request",sendingOtpToEmail);
 userRouter.put("/email-otp-verify",verifyingEmail);
 
 userRouter.get("/me", isAuthenticated, getLoggedInUserData);
+
+userRouter.get("/get-rides", isAuthenticated, getAllRides);
 
 export default userRouter;
