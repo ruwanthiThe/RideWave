@@ -4,6 +4,7 @@ import {
   verifyPhoneOtpForLogin,
   verifyPhoneOtpForRegistration,
   sendingOtpToEmailDriver,
+  newRide,
   verifyingEmailOtpDriver,
   getLoggedInDriverData,
   updateDriverStatus,
@@ -27,6 +28,8 @@ driverRouter.get("/me", isAuthenticatedDriver, getLoggedInDriverData);
 driverRouter.get("/get-drivers-data", getDriversById);
 
 driverRouter.put("/update-status", isAuthenticatedDriver, updateDriverStatus);
+
+driverRouter.post("/new-ride", isAuthenticatedDriver, newRide);
 
 
 

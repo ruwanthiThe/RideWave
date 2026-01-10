@@ -12,8 +12,9 @@ import { Toast } from "react-native-toast-notifications";
 
 export default function RideDetailsScreen() {
   const { orderData: orderDataObj } = useLocalSearchParams() as any;
+  const orderData = orderDataObj ? JSON.parse(decodeURIComponent(orderDataObj)) : null;
   const [orderStatus, setorderStatus] = useState("Processing");
-  const orderData = JSON.parse(orderDataObj);
+  //const orderData = JSON.parse(orderDataObj);
   const [region, setRegion] = useState<any>({
     latitude: 37.78825,
     longitude: -122.4324,

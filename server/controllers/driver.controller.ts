@@ -197,5 +197,35 @@ export const getDriversById = async (req: Request, res: Response) => {
   }
 };
 
+// creating new ride
+export const newRide = async (req: any, res: Response) => {
+  try {
+    const {
+      userId,
+      charge,
+      status,
+      currentLocationName,
+      destinationLocationName,
+      distance,
+    } = req.body;
+
+    const newRide = await prisma.rides.create({
+      data: {
+        userId,
+        driverId: req.driver.id,
+        charge: parseFloat(charge),
+        status,
+        currentLocationName,
+        destinationLocationName,
+        distance,
+      },
+    });
+    res.status(201).json({ success: true, newRide });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 

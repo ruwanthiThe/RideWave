@@ -347,50 +347,56 @@ export default function HomeScreen() {
       });
   };
 
-  const acceptRideHandler = async () => {
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    await axios
-      .post(
-        `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/new-ride`,
-        {
-          userId: userData?.id!,
-          charge: (distance * parseInt(driver?.rate!)).toFixed(2),
-          status: "Processing",
-          currentLocationName,
-          destinationLocationName,
-          distance,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      )
-      .then(async (res) => {
-        const data = {
-          ...driver,
-          currentLocation,
-          marker,
-          distance,
-        };
-        const driverPushToken = "ExponentPushToken[XeWE1EPuFcJ7HPJw2PuDuS]";
-//XeWE1EPuFcJ7HPJw2PuDuS
-        await sendPushNotification(driverPushToken, data);
+const acceptRideHandler = async () => {
+  console.log("Accept Ride button pressed!");  // <-- Add this
 
-        const rideData = {
-          user: userData,
-          currentLocation,
-          marker,
-          driver,
-          distance,
-          rideData: res.data.newRide,
-        };
-        router.push({
-          pathname: "/(routes)/ride-details",
-          params: { orderData: JSON.stringify(rideData) },
-        });
+  const accessToken = await AsyncStorage.getItem("accessToken");
+  console.log("Access Token:", accessToken);
+
+  await axios
+    .post(
+      `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/new-ride`,
+      {
+        userId: userData?.id!,
+        charge: (distance * parseInt(driver?.rate!)).toFixed(2),
+        status: "Processing",
+        currentLocationName,
+        destinationLocationName,
+        distance,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+    .then(async (res) => {
+      console.log("Ride accepted response:", res.data);  // <-- Add this
+      const data = {
+        ...driver,
+        currentLocation,
+        marker,
+        distance,
+      };
+      const driverPushToken = "ExponentPushToken[XeWE1EPuFcJ7HPJw2PuDuS]";
+      await sendPushNotification(driverPushToken, data);
+
+      const rideData = {
+        user: userData,
+        currentLocation,
+        marker,
+        driver,
+        distance,
+        rideData: res.data.newRide,
+      };
+      router.push({
+        pathname: "/(routes)/ride-details",
+        params: { orderData: JSON.stringify(rideData) },
       });
-  };
+    })
+    .catch((err) => console.log("Error in acceptRideHandler:", err));
+};
+
 
   return (
     <View style={[external.fx_1]}>
