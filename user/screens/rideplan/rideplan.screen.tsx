@@ -416,16 +416,16 @@ export default function RidePlanScreen() {
       return;
     }
 
-    console.log("Fetching current location name...");
+    //console.log("Fetching current location name...");
     const currentLocationName = await axios.get(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.latitude},${currentLocation.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
     );
-    console.log(currentLocationName.data.status);
-    console.log(currentLocationName.data);
+    //console.log(currentLocationName.data.status);
+    //console.log(currentLocationName.data);
 
     
 
-    console.log("Fetching destination location name...");
+    //console.log("Fetching destination location name...");
     const destinationLocationName = await axios.get(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker.latitude},${marker.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
     );
@@ -443,14 +443,14 @@ export default function RidePlanScreen() {
         destinationLocationName.data.results?.[0]?.formatted_address || "Unknown location",
     };
 
-    console.log("DATA TO SEND:", data);
+    //console.log("DATA TO SEND:", data);
 
-    const driverPushToken = "ExponentPushToken[3CjRb5FFd-wZHQpna15Z7d]";
+    const driverPushToken = "ExponentPushToken[EwC0qkCA-usV6TWrKdbjek]";
 
-    console.log("Sending push notification...");
+    //console.log("Sending push notification...");
     await sendPushNotification(driverPushToken, data);
 
-    console.log("handleOrder finished successfully");
+   // console.log("handleOrder finished successfully");
   } catch (error) {
     console.log("ERROR in handleOrder:", error);
   }

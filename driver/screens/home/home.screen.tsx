@@ -248,7 +248,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-  if (!driver || !wsConnected) return; // wait for both
+  if (!driver || !wsConnected) return; 
 
   let subscription: any;
 
@@ -284,7 +284,7 @@ export default function HomeScreen() {
   return () => {
     if (subscription) subscription.remove();
   };
-}, [driver, wsConnected]); // <--- important
+}, [driver, wsConnected]); 
 
   const getRecentRides = async () => {
     const accessToken = await AsyncStorage.getItem("accessToken");
@@ -348,7 +348,7 @@ export default function HomeScreen() {
   };
 
 const acceptRideHandler = async () => {
-  console.log("Accept Ride button pressed!");  // <-- Add this
+  //console.log("Accept Ride button pressed!");  
 
   const accessToken = await AsyncStorage.getItem("accessToken");
   console.log("Access Token:", accessToken);
@@ -371,7 +371,7 @@ const acceptRideHandler = async () => {
       }
     )
     .then(async (res) => {
-      console.log("Ride accepted response:", res.data);  // <-- Add this
+      //console.log("Ride accepted response:", res.data);  // <-- Add this
       const data = {
         ...driver,
         currentLocation,
