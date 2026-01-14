@@ -21,3 +21,5 @@ export const slides = [
       "Now enjoy your trip, pay your driver after reaching the destination!",
   },
 ];
+
+
