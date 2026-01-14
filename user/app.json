@@ -23,7 +23,7 @@
       "package": "com.becodemy.RideWave",
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "AIzaSyDNaXdGGDljKmK8GaY6AnGMEq131yOlbio"
         }
       }
     },
