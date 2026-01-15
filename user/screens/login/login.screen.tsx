@@ -43,7 +43,7 @@ export default function LoginScreen() {
         pathname: "/otp-verification",
         params: {
           phone: phoneNumber,
-          otp: res.data.otp || "", // 👈 OTP comes only in dev
+          otp: res.data.otp || "", //  OTP comes only in dev
         },
       });
     }

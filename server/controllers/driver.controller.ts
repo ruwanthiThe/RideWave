@@ -317,64 +317,7 @@ export const verifyingEmailOtp = async (req: Request, res: Response) => {
 
 
 
-/*
-// ==========================
-// SEND OTP TO DRIVER EMAIL
-// ==========================
-export const sendingOtpToEmailDriver = async (req: Request, res: Response) => {
-  try {
-    const { name, email, phone_number, country, vehicle_type, registration_number, registration_date, driving_license, vehicle_color, rate } = req.body;
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    // driver data for JWT
-    const driver = { name, email, phone_number, country, vehicle_type, registration_number, registration_date, driving_license, vehicle_color, rate };
-
-    const token = jwt.sign({ driver, otp }, process.env.EMAIL_ACTIVATION_SECRET!, { expiresIn: "5m" });
-
-    // Send OTP via Nylas
-    await nylas.messages.send({
-      identifier: process.env.USER_GRANT_ID!, // same as user
-      requestBody: {
-        to: [{ name, email }],
-        subject: "Verify your RideWave email",
-        body: `
-          <p>Hi ${name},</p>
-          <p>Your OTP code is: <strong>${otp}</strong></p>
-          <p>This OTP is valid for 5 minutes.</p>
-          <p>Thanks,<br/>RideWave Team</p>
-        `,
-      },
-    });
-
-    console.log(`OTP sent to driver ${email}: ${otp}`); // for debugging
-
-    res.status(201).json({ success: true, token });
-  } catch (error: any) {
-    console.error(error);
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-// ==========================
-// VERIFY DRIVER EMAIL OTP
-// ==========================
-export const verifyingEmailOtpDriver = async (req: Request, res: Response) => {
-  try {
-    const { otp, token } = req.body;
-    const newDriver: any = jwt.verify(token, process.env.EMAIL_ACTIVATION_SECRET!);
-
-    if (newDriver.otp !== otp) {
-      return res.status(400).json({ success: false, message: "OTP is not correct or expired!" });
-    }
-
-    const driver = await prisma.driver.create({ data: newDriver.driver });
-    sendToken(driver, res);
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ success: false, message: "OTP verification failed" });
-  }
-};*/
 
 // get logged in driver data
 export const getLoggedInDriverData = async (req: any, res: Response) => {
