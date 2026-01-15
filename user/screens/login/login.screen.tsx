@@ -18,6 +18,7 @@ export default function LoginScreen() {
   const [countryCode, setCountryCode] = useState("+94");
   const toast = useToast();
 
+  /*
    const handleSubmit = async () => {
   if (phone_number === "" || countryCode === "") {
     toast.show("Please fill the fields!", { placement: "bottom" });
@@ -52,9 +53,40 @@ export default function LoginScreen() {
   } finally {
     setloading(false);
   }
+};*/
+
+const handleSubmit = async () => {
+  if (phone_number === "" || countryCode === "") {
+    toast.show("Please fill the fields!", { placement: "bottom" });
+    return;
+  }else {
+    setloading(true);
+    const phoneNumber = `+${countryCode}${phone_number}`;
+    
+    await axios
+        .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+          phone_number: phoneNumber,
+        })
+        .then((res) => {
+          setloading(false);
+          router.push({
+            pathname: "/(routes)/otp-verification",
+            params: { phoneNumber },
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          setloading(false);
+          toast.show(
+            "Something went wrong! please re check your phone number!",
+            {
+              type: "danger",
+              placement: "bottom",
+            }
+          );
+        });
+  }
 };
-
-
 
   return (
     <AuthContainer

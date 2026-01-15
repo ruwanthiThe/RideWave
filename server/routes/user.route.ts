@@ -4,7 +4,7 @@ import {
   getAllRides,
   registerUser,
   sendingOtpToEmail,
-  signupNewUser,
+  //signupNewUser,
   verifyingEmail,
   verifyOtp,
 } from "../controllers/user.controller";
@@ -17,7 +17,7 @@ userRouter.post("/registration", registerUser);
 
 userRouter.post("/verify-otp", verifyOtp); // added route for OTP verification
 
-userRouter.put("/sign-up-user", signupNewUser);
+//userRouter.put("/sign-up-user", signupNewUser);
 
 userRouter.post("/email-otp-request",sendingOtpToEmail);
 
