@@ -12,10 +12,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -23,7 +25,7 @@
       "package": "com.becodemy.Ridewave-Driver",
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "AIzaSyDNaXdGGDljKmK8GaY6AnGMEq131yOlbio"
         }
       }
     },
@@ -41,6 +43,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+     "extra": {
+      "eas": {
+        "projectId": "77098f6d-ed59-45d9-8b6b-203f2b5a1209"
+      }
     }
   }
 }

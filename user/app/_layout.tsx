@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { Stack } from "expo-router";
 import { ToastProvider } from "react-native-toast-notifications";
-import { LogBox } from "react-native";
+import { LogBox, View, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 
 export {
@@ -17,17 +17,24 @@ export {
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     "TT-Octosquares-Medium": require("../assets/fonts/TT-Octosquares-Medium.ttf"),
+    "GTWalsheimPro-Bold": require("../assets/fonts/GTWalsheimPro-Bold.ttf"),
+    "GTWalsheimPro-Regular": require("../assets/fonts/GTWalsheimPro-Regular.ttf"),
+    "GTWalsheimPro-Medium": require("../assets/fonts/GTWalsheimPro-Medium.ttf"),
   });
 
   useEffect(() => {
-    LogBox.ignoreAllLogs(true);
+    // Show logs so runtime errors are visible during debugging
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
   if (!loaded && !error) {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return <RootLayoutNav />;
@@ -38,6 +45,7 @@ function RootLayoutNav() {
     <ToastProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="(routes)/onboarding/index" />
       </Stack>
     </ToastProvider>
   );
