@@ -445,7 +445,7 @@ export default function RidePlanScreen() {
 
     //console.log("DATA TO SEND:", data);
 
-    const driverPushToken = "ExponentPushToken[-8vlwXKfTrN6TANxCn4GuP]";
+    const driverPushToken = "ExponentPushToken[J9C8TSDGQxVMzgJHJpbV9e]";
 
     //console.log("Sending push notification...");
     await sendPushNotification(driverPushToken, data);
