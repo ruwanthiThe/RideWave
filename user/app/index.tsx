@@ -11,7 +11,7 @@ export default function Index() {
 
     const getData = async () => {
       try {
-        const accessToken = await AsyncStorage.removeItem("accessToken");
+        const accessToken = await AsyncStorage.getItem("accessToken");
         if (isMounted) {
           setisLoggedIn(!!accessToken);
         }
