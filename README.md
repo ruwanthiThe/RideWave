@@ -4,7 +4,7 @@
 
 ## 🚀 Project Overview
 
-This project is a high-performance mobile application developed using **Expo React Native**. It features two distinct interfaces: one for passengers to book rides and another for drivers to accept and manage those rides.
+This project is a mobile application developed using **Expo React Native**. It features two distinct interfaces: one for passengers to book rides and another for drivers to accept and manage those rides.
 
 ### Key Features
 
