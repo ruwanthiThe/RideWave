@@ -1,4 +1,4 @@
-# RideWave – Real-Time Car Booking Mobile App 
+# Ridex – Real-Time Car Booking Mobile App 
 
 **RideWave** is a comprehensive, full-stack ride-sharing application built to provide a seamless experience for both passengers and drivers, similar to Uber. It leverages real-time location tracking, secure authentication, and a robust backend to manage ride requests and completions.
 
