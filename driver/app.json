@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.becodemy.Ridewave-Driver",
+      "package": "com.advagroup.ridex",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDNaXdGGDljKmK8GaY6AnGMEq131yOlbio"

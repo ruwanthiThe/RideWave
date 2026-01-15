@@ -1,4 +1,4 @@
-package com.becodemy.RideWave
+package com.advagroup.ridex
 
 import android.app.Application
 import android.content.res.Configuration
