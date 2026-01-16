@@ -41,12 +41,8 @@ export default function RidePlanScreen() {
   const [wsConnected, setWsConnected] = useState(false);
   const [places, setPlaces] = useState<any>([]);
   const [query, setQuery] = useState("");
-  const [region, setRegion] = useState<any>({
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState<any>(null); //start with null
+
   const [marker, setMarker] = useState<any>(null);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [distance, setDistance] = useState<any>(null);
