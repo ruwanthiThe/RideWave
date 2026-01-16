@@ -560,7 +560,7 @@ export default function RidePlanScreen() {
     >
       <View>
         <Text style={{ fontSize: 20, fontWeight: "600" }}>
-          RideWave {driver?.vehicle_type}
+          RideX {driver?.vehicle_type}
         </Text>
         <Text style={{ fontSize: 16 }}>
           {getEstimatedArrivalTime(travelTimes.driving)} dropoff

@@ -73,7 +73,7 @@ export default function RegistrationScreen() {
             textAlign: "center",
           }}
         >
-          Ride Wave
+          RideX
         </Text>
         <View style={{ padding: windowWidth(20) }}>
           <View

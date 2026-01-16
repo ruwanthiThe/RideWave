@@ -43,7 +43,7 @@ export default function HomeScreen() {
             fontSize: 25,
           }}
         >
-          Ride Wave
+          RideX
         </Text>
         <LocationSearchBar />
       </View>

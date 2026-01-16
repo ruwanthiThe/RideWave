@@ -79,7 +79,7 @@ export default function DocumentVerificationScreen() {
             textAlign: "center",
           }}
         >
-          Ride Wave
+          RideX
         </Text>
         <View style={{ padding: windowWidth(20) }}>
           <ProgressBar fill={2} />

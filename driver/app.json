@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Ridewave-Driver",
-    "slug": "Ridewave-Driver",
+    "name": "RideX-Driver",
+    "slug": "RideX-Driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "Ridewave-Driver",
+    "scheme": "RideX-Driver",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",

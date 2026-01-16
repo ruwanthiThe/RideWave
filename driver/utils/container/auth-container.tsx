@@ -33,7 +33,7 @@ const AuthContainer = ({ container, topSpace, imageShow }: Props) => {
             paddingTop: windowHeight(50),
           }}
         >
-          Ride Wave
+          RideX
         </Text>
       )}
       <Image

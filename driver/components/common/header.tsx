@@ -34,7 +34,7 @@ export default function Header({ isOn, toggleSwitch }: HeaderProps) {
                 textAlign: "left",
               }}
             >
-              Ride Wave
+              RideX
             </Text>
           </View>
           <TouchableOpacity style={styles.notificationIcon} activeOpacity={0.5}>

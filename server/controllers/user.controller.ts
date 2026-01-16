@@ -141,8 +141,8 @@ export const sendingOtpToEmail = async (
           subject: "Verify your email address!",
           body: `
           <p>Hi ${name},</p>
-      <p>Your Ridewave verification code is ${otp}. If you didn't request for this OTP, please ignore this email!</p>
-      <p>Thanks,<br>Ridewave Team</p>
+      <p>Your RideX verification code is ${otp}. If you didn't request for this OTP, please ignore this email!</p>
+      <p>Thanks,<br>RideX Team</p>
           `,
         },
       });

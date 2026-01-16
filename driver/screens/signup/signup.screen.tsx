@@ -76,7 +76,7 @@ export default function SignupScreen() {
             textAlign: "center",
           }}
         >
-          Ride Wave
+          RideX
         </Text>
         <View style={{ padding: windowWidth(20) }}>
           <ProgressBar fill={1} />

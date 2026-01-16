@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "RideWave",
-    "slug": "RideWave",
+    "name": "RideX",
+    "slug": "RideX",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "RideWave",
+    "scheme": "RideX",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
