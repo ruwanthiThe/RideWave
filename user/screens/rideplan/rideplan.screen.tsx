@@ -117,7 +117,7 @@ export default function RidePlanScreen() {
   }, []);
 
   const initializeWebSocket = () => {
-    ws.current = new WebSocket("ws://192.168.1.7:5000");
+    ws.current = new WebSocket("ws://192.168.1.6:5000");
     ws.current.onopen = () => {
       console.log("Connected to websocket server");
       setWsConnected(true);
@@ -441,7 +441,7 @@ export default function RidePlanScreen() {
 
     //console.log("DATA TO SEND:", data);
 
-    const driverPushToken = "ExponentPushToken[J9C8TSDGQxVMzgJHJpbV9e]";
+    const driverPushToken = "ExponentPushToken[h6LzbDEWHh74GhUTi3mZZ-]";
 
     //console.log("Sending push notification...");
     await sendPushNotification(driverPushToken, data);
