@@ -52,7 +52,7 @@ export default function HomeScreen() {
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [lastLocation, setLastLocation] = useState<any>(null);
   const [recentRides, setrecentRides] = useState([]);
-  const ws = new WebSocket("ws://192.168.1.7:5000");
+  const ws = new WebSocket("ws://192.168.1.6:5000");
   
 
   const { colors } = useTheme();
